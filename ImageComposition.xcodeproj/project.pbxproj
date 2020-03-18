@@ -8,13 +8,14 @@
 
 /* Begin PBXBuildFile section */
 		3111ED2F2421BBEE00E0595F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3111ED2E2421BBEE00E0595F /* AppDelegate.swift */; };
-		3111ED312421BBEE00E0595F /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3111ED302421BBEE00E0595F /* SceneDelegate.swift */; };
-		3111ED332421BBEE00E0595F /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3111ED322421BBEE00E0595F /* ViewController.swift */; };
+		3111ED332421BBEE00E0595F /* PickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3111ED322421BBEE00E0595F /* PickerViewController.swift */; };
 		3111ED362421BBEE00E0595F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3111ED342421BBEE00E0595F /* Main.storyboard */; };
 		3111ED382421BBEF00E0595F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3111ED372421BBEF00E0595F /* Assets.xcassets */; };
 		3111ED3B2421BBEF00E0595F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3111ED392421BBEF00E0595F /* LaunchScreen.storyboard */; };
 		3111ED462421BBF000E0595F /* ImageCompositionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3111ED452421BBF000E0595F /* ImageCompositionTests.swift */; };
 		3111ED512421BBF000E0595F /* ImageCompositionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3111ED502421BBF000E0595F /* ImageCompositionUITests.swift */; };
+		3111ED5F2421C04B00E0595F /* PickerViewViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3111ED5E2421C04B00E0595F /* PickerViewViewModel.swift */; };
+		3111ED632421C16E00E0595F /* PhotoCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3111ED622421C16E00E0595F /* PhotoCell.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -37,8 +38,7 @@
 /* Begin PBXFileReference section */
 		3111ED2B2421BBEE00E0595F /* ImageComposition.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ImageComposition.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3111ED2E2421BBEE00E0595F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		3111ED302421BBEE00E0595F /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
-		3111ED322421BBEE00E0595F /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		3111ED322421BBEE00E0595F /* PickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickerViewController.swift; sourceTree = "<group>"; };
 		3111ED352421BBEE00E0595F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		3111ED372421BBEF00E0595F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3111ED3A2421BBEF00E0595F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -49,6 +49,8 @@
 		3111ED4C2421BBF000E0595F /* ImageCompositionUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ImageCompositionUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3111ED502421BBF000E0595F /* ImageCompositionUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCompositionUITests.swift; sourceTree = "<group>"; };
 		3111ED522421BBF000E0595F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		3111ED5E2421C04B00E0595F /* PickerViewViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickerViewViewModel.swift; sourceTree = "<group>"; };
+		3111ED622421C16E00E0595F /* PhotoCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoCell.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -99,9 +101,11 @@
 		3111ED2D2421BBEE00E0595F /* ImageComposition */ = {
 			isa = PBXGroup;
 			children = (
+				3111ED672421C1B000E0595F /* Reusable Views */,
+				3111ED662421C1A100E0595F /* ViewModel */,
+				3111ED652421C19600E0595F /* View Controllers */,
+				3111ED642421C19000E0595F /* Model */,
 				3111ED2E2421BBEE00E0595F /* AppDelegate.swift */,
-				3111ED302421BBEE00E0595F /* SceneDelegate.swift */,
-				3111ED322421BBEE00E0595F /* ViewController.swift */,
 				3111ED342421BBEE00E0595F /* Main.storyboard */,
 				3111ED372421BBEF00E0595F /* Assets.xcassets */,
 				3111ED392421BBEF00E0595F /* LaunchScreen.storyboard */,
@@ -126,6 +130,37 @@
 				3111ED522421BBF000E0595F /* Info.plist */,
 			);
 			path = ImageCompositionUITests;
+			sourceTree = "<group>";
+		};
+		3111ED642421C19000E0595F /* Model */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		3111ED652421C19600E0595F /* View Controllers */ = {
+			isa = PBXGroup;
+			children = (
+				3111ED322421BBEE00E0595F /* PickerViewController.swift */,
+			);
+			path = "View Controllers";
+			sourceTree = "<group>";
+		};
+		3111ED662421C1A100E0595F /* ViewModel */ = {
+			isa = PBXGroup;
+			children = (
+				3111ED5E2421C04B00E0595F /* PickerViewViewModel.swift */,
+			);
+			path = ViewModel;
+			sourceTree = "<group>";
+		};
+		3111ED672421C1B000E0595F /* Reusable Views */ = {
+			isa = PBXGroup;
+			children = (
+				3111ED622421C16E00E0595F /* PhotoCell.swift */,
+			);
+			path = "Reusable Views";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -259,9 +294,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3111ED332421BBEE00E0595F /* ViewController.swift in Sources */,
+				3111ED332421BBEE00E0595F /* PickerViewController.swift in Sources */,
+				3111ED5F2421C04B00E0595F /* PickerViewViewModel.swift in Sources */,
 				3111ED2F2421BBEE00E0595F /* AppDelegate.swift in Sources */,
-				3111ED312421BBEE00E0595F /* SceneDelegate.swift in Sources */,
+				3111ED632421C16E00E0595F /* PhotoCell.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -437,6 +473,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 5JG4H9G3DC;
 				INFOPLIST_FILE = ImageComposition/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -455,6 +492,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 5JG4H9G3DC;
 				INFOPLIST_FILE = ImageComposition/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
