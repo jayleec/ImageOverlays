@@ -19,39 +19,54 @@ class PickerViewViewModel: NSObject {
     
     weak var delegate: PickerViewViewModelDelegate?
     
-    private var albums: PHFetchResult<PHAssetCollection>?
-    private var photos: PHFetchResult<PHAsset>? {
+    var smartAlbums: PHFetchResult<PHAssetCollection>?
+    var assets: PHFetchResult<PHAsset>! {
         didSet {
+            print("assets didSet \(assets.count)")
             delegate?.reloadView()
         }
     }
-    private let albumsFetchQueue = DispatchQueue(label: "albums_fetch")
     
-    var numberOfAlbums: Int {
-        return (albums?.count ?? 0) + 1
-    }
     var numberOfPhotos: Int {
-        return photos?.count ?? 0
+        return assets.count
     }
-    var selectedAlbumIndex: AlbumIndex? {
+    var selectedAlbumIndex: AlbumIndex = 0 {
         didSet {
-            guard let index = selectedAlbumIndex else { return }
-            fetchPhotos(for: index)
+            print("selectedAlbumIndex didSet \(selectedAlbumIndex)")
+            fetchPhotos(at: selectedAlbumIndex)
         }
     }
     
+    private let defaultOptions: PHFetchOptions = {
+        let options = PHFetchOptions()
+        options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+        return options
+    }()
+    
+    override init() {
+        super.init()
+        if assets == nil {
+            assets = PHAsset.fetchAssets(with: defaultOptions)
+        }
+    }
+     
     func fetchAlbums() {
-        selectedAlbumIndex = 0
-        albumsFetchQueue.async {
-            self.albums = PHAssetCollection.fetchAssetCollections(with: .smartAlbum, subtype: .any, options: nil)
+        self.smartAlbums = PHAssetCollection.fetchAssetCollections(with: .smartAlbum, subtype: .any, options: .none)
+    }
+    
+    func fetchPhotos(at index: AlbumIndex?) {
+        if index == nil {
+            assets = PHAsset.fetchAssets(with: defaultOptions)
+        } else if let album = smartAlbums?[index!] {
+            assets = PHAsset.fetchAssets(in: album, options: defaultOptions)
         }
     }
     
-    private func fetchPhotos(for index: AlbumIndex) {
-        if index == 0 {
-            photos = PHAsset.fetchAssets(with: .none)
-        } else if let album = albums?[index - 1] {
-            photos = PHAsset.fetchAssets(in: album, options: nil)
-        }
+    func asset(at indexPath: IndexPath) -> PHAsset? {
+        return indexPath.row < numberOfPhotos ? assets[indexPath.row] : nil
+    }
+    
+    func update(assets: PHFetchResult<PHAsset>) {
+        self.assets = assets
     }
 }

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Bucket
+   uuid = "8976A8BE-0081-4BBA-8C18-81760F743474"
+   type = "1"
+   version = "2.0">
+   <Breakpoints>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "F2D46979-3291-4D58-A30B-87A638EA081A"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "ImageComposition/View Controllers/PickerViewController.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "178"
+            endingLineNumber = "178"
+            landmarkName = "photoLibraryDidChange(_:)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "F2D46979-3291-4D58-A30B-87A638EA081A - ccb2da1d27c7db21"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 () -&gt; () in ImageComposition.PickerViewController.photoLibraryDidChange(__C.PHChange) -&gt; ()"
+                  moduleName = "ImageComposition"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/ninjajaekyung/Desktop/ImageComposition/ImageComposition/View%20Controllers/PickerViewController.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "178"
+                  endingLineNumber = "178"
+                  offsetFromSymbolStart = "988">
+               </Location>
+               <Location
+                  uuid = "F2D46979-3291-4D58-A30B-87A638EA081A - 9067c6ac0fd8fad5"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 (Swift.Int) -&gt; Foundation.IndexPath in closure #1 () -&gt; () in ImageComposition.PickerViewController.photoLibraryDidChange(__C.PHChange) -&gt; ()"
+                  moduleName = "ImageComposition"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/ninjajaekyung/Desktop/ImageComposition/ImageComposition/View%20Controllers/PickerViewController.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "178"
+                  endingLineNumber = "178"
+                  offsetFromSymbolStart = "60">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+   </Breakpoints>
+</Bucket>

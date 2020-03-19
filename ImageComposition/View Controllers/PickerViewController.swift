@@ -8,15 +8,31 @@
 
 import UIKit
 import Photos.PHPhotoLibrary
+import PhotosUI
 
 class PickerViewController: UIViewController {
 
     @IBOutlet weak var collectionView: UICollectionView!
     
     private let viewModel = PickerViewViewModel()
+    private let imageManager = PHCachingImageManager()
+    private var cellSize: CGSize {
+        get {
+            return (collectionView.collectionViewLayout as? UICollectionViewFlowLayout)?.itemSize ?? .zero
+        }
+    }
+    private let requestOptions: PHImageRequestOptions = {
+        let options = PHImageRequestOptions()
+        options.isNetworkAccessAllowed = true
+        options.resizeMode = .fast
+        return options
+    }()
+    private var previousPreheatRect = CGRect.zero
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        resetCache()
+        PHPhotoLibrary.shared().register(self)
         viewModel.delegate = self
         PHPhotoLibrary.requestAuthorization { status in
             DispatchQueue.main.async {
@@ -30,21 +46,79 @@ class PickerViewController: UIViewController {
         }
     }
     
-    @IBAction func selectAlbumButtonTapped(_ sender: Any) {
-        UIAlertController(title: nil, message: "Pick an album", preferredStyle: .actionSheet)
-        // TODO: if not done show indicator
-        
+    deinit {
+        print("deinit")
+        PHPhotoLibrary.shared().unregisterChangeObserver(self)
     }
+    
+    @IBAction func selectAlbumButtonTapped(_ sender: Any) {
+        let alert = UIAlertController(title: nil, message: "Pick an album", preferredStyle: .actionSheet)
+        alert.addAction(UIAlertAction(title: "All Photos", style: .default, handler: { [weak self] _ in
+            guard let self = self else { return }
+            self.fetchPhtos(at: nil)
+        }))
+        alert.addAction(UIAlertAction(title: "Cancle", style: .cancel, handler: nil))
+        viewModel.smartAlbums?.enumerateObjects { collectionView, index, _ in
+            alert.addAction(UIAlertAction(title: collectionView.localizedTitle ?? "Untitled", style: .default, handler: { [weak self] _ in
+                guard let self = self else { return }
+                self.fetchPhtos(at: index)
+            }))
+        }
+        alert.deleteSubConstraints()
+        present(alert, animated: false, completion: nil)
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        guard let destination = segue.destination as? PreviewViewController else { return }
+        let indexPath = collectionView.indexPath(for: sender as! UICollectionViewCell)!
+        destination.asset = viewModel.asset(at: indexPath)
+    }
+    
+    // MARK: Convenience
     
     private func fetchAlbums() {
         viewModel.fetchAlbums()
+    }
+    
+    private func fetchPhtos(at index: AlbumIndex?) {
+        viewModel.fetchPhotos(at: index)
     }
     
     // TODO:
     private func showNotAvailableAlert() {
         
     }
-    // TODO: Image Caching
+    
+    // MARK: Asset Caching
+    
+    func resetCache() {
+        imageManager.stopCachingImagesForAllAssets()
+        previousPreheatRect = .zero
+    }
+    
+    func cacheAssets() {
+        let visibleRect = CGRect(origin: collectionView.contentOffset, size: collectionView.bounds.size)
+        let preheatRect = visibleRect.insetBy(dx: 0, dy: -0.5 * visibleRect.height)
+        
+        // Update only if the visible area is significantly different from the last preheated area.
+        let delta = abs(preheatRect.midY - previousPreheatRect.midY)
+        guard delta > view.bounds.height / 3 else { return }
+        
+        // Compute the assets to start caching and to stop caching.
+        let (addedRects, removeRects) = previousPreheatRect.diffrences(with: preheatRect)
+        let addedAssets: [PHAsset] = addedRects
+            .flatMap { rect in collectionView.indexPathsForElements(in: rect) }
+            .map { indexPath in viewModel.asset(at: indexPath)! }
+        let removedAssets = removeRects
+            .flatMap { rect in collectionView.indexPathsForElements(in: rect) }
+            .map { indexPath in viewModel.asset(at: indexPath)! }
+        print("added \(addedAssets.count)")
+        
+        imageManager.startCachingImages(for: addedAssets, targetSize: cellSize, contentMode: .aspectFill, options: nil)
+        imageManager.stopCachingImages(for: removedAssets, targetSize: cellSize, contentMode: .aspectFill, options: nil)
+        
+        previousPreheatRect = preheatRect
+    }
 }
 
 // MARK: UICollectionView Data Source
@@ -56,7 +130,21 @@ extension PickerViewController: UICollectionViewDataSource, UICollectionViewDele
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PhotoCell.reuseId, for: indexPath) as! PhotoCell
+        guard let asset = viewModel.asset(at: indexPath) else { return cell }
+        if asset.mediaSubtypes.contains(.photoLive) {
+            cell.liveImageBadge.image = PHLivePhotoView.livePhotoBadgeImage(options: .overContent)
+        }
+        cell.assetId = asset.localIdentifier
+        imageManager.requestImage(for: asset, targetSize: cellSize, contentMode: .aspectFill, options: requestOptions, resultHandler: { image, _ in
+            if cell.assetId == asset.localIdentifier {
+                cell.imageView.image = image
+            }
+        })
         return cell
+    }
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        cacheAssets()
     }
 }
 
@@ -64,7 +152,7 @@ extension PickerViewController: UICollectionViewDataSource, UICollectionViewDele
 
 extension PickerViewController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let width = (collectionView.frame.width - 20) / 3
+        let width = (collectionView.bounds.width - 4) / 3
         return CGSize(width: width, height: width)
     }
 }
@@ -74,5 +162,34 @@ extension PickerViewController: UICollectionViewDelegateFlowLayout {
 extension PickerViewController: PickerViewViewModelDelegate {
     func reloadView() {
         self.collectionView.reloadData()
+        cacheAssets()
+    }
+}
+
+// MARK: PHPhotoLibraryChangeObserver
+
+extension PickerViewController: PHPhotoLibraryChangeObserver {
+    func photoLibraryDidChange(_ changeInstance: PHChange) {
+        guard let changes = changeInstance.changeDetails(for: viewModel.assets) else { return }
+        DispatchQueue.main.sync {
+            viewModel.update(assets: changes.fetchResultAfterChanges)
+            if changes.hasIncrementalChanges {
+                if let removed = changes.removedIndexes, removed.count > 0 {
+                    collectionView.deleteItems(at: removed.map { IndexPath(item: $0, section: 0)})
+                }
+                if let inserted = changes.insertedIndexes, inserted.count > 0 {
+                    collectionView.insertItems(at: inserted.map { IndexPath(item: $0, section: 0)})
+                }
+                if let changed = changes.changedIndexes, changed.count > 0 {
+                    collectionView.reloadItems(at: changed.map { IndexPath(item: $0, section: 0)})
+                }
+                changes.enumerateMoves { fromIndex, toIndex in
+                    self.collectionView.moveItem(at: IndexPath(item: fromIndex, section: 0), to: IndexPath(item: toIndex, section: 0))
+                }
+            } else {
+                collectionView.reloadData()
+            }
+            resetCache()
+        }
     }
 }
