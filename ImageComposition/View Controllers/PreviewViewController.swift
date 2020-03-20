@@ -19,12 +19,16 @@ class PreviewViewController: UIViewController {
     
     var asset: PHAsset!
     private var playerLayer: AVPlayerLayer!
-    lazy var targetSize: CGSize = {
+    private lazy var targetSize: CGSize = {
         let scale = UIScreen.main.scale
         return CGSize(width: imageView.bounds.width * scale,
                       height: imageView.bounds.height * scale)
     }()
     private var isPlayingHint = false
+    private var videoAssetUrl: URL?
+    private var currentImage: UIImage?
+    private var isPreviewOn = false
+    private var overlayLayer: CALayer?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -33,20 +37,85 @@ class PreviewViewController: UIViewController {
             toolBar.isHidden = true
         }
     }
-    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         self.tabBarController?.tabBar.isHidden = false
         view.layoutIfNeeded()
         updateImage()
     }
+    @IBAction func showPreviewButtonTapped(_ sender: Any) {
+        showOverlayPreview()
+    }
     
     @IBAction func playButtonTapped(_ sender: Any) {
         playVideo()
     }
     
+    @IBAction func saveButtonTapped(_ sender: Any) {
+        if asset.mediaType == .video {
+            if videoAssetUrl == nil {
+                self.convertPHAsset2AVAsset(asset: asset, options: nil) { avAsset in
+                    guard let avAsset = avAsset else { return }
+                    VideoOverlays.shared.exportCombinedVideo(from: avAsset.url) { exportUrl in
+                        guard let exportUrl = exportUrl else {
+                            print("no export url")
+                            return
+                        }
+                        self.saveVideo(videoUrl: exportUrl)
+                    }
+                }
+            } else {
+                VideoOverlays.shared.exportCombinedVideo(from: videoAssetUrl!) { exportUrl in
+                    guard let exportUrl = exportUrl else {
+                        print("no export url")
+                        return
+                    }
+                    self.saveVideo(videoUrl: exportUrl)
+                }
+            }
+        } else {
+            if !isPreviewOn {
+                showOverlayPreview()
+            }
+            ImageOverlays.shared.exportImage(imageView: imageView) { combined in
+                guard let combined = combined else { return }
+                self.saveImage(image: combined)
+            }
+        }
+    }
+    
+    private func saveImage(image: UIImage) {
+        PHPhotoLibrary.shared().performChanges({
+            PHAssetChangeRequest.creationRequestForAsset(from: image)
+        }) {[weak self] (isSaved, error) in
+            if isSaved {
+                print("Saved")
+            } else {
+                print("saving error \(error)")
+            }
+            DispatchQueue.main.async {
+                self?.navigationController?.popViewController(animated: true)
+            }
+        }
+    }
+    
+    private func saveVideo(videoUrl: URL) {
+        PHPhotoLibrary.shared().performChanges({
+            PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: videoUrl)
+        }) { [weak self] (isSaved, error) in
+            if isSaved {
+                print("Saved")
+            } else {
+                print("saving error \(error)")
+            }
+            DispatchQueue.main.async {
+                self?.navigationController?.popViewController(animated: true)
+            }
+        }
+    }
+    
     @objc
-    func hideToolBar() {
+    private func hideToolBar() {
         if asset.mediaType == .video {
             toolBar.isHidden = !toolBar.isHidden
         }
@@ -67,7 +136,6 @@ class PreviewViewController: UIViewController {
         options.isNetworkAccessAllowed = true
         options.progressHandler = { progress, _, _, _ in
             DispatchQueue.main.sync {
-                print("progress\(progress)")
                 self.progressView.progress = Float(progress)
             }
         }
@@ -79,7 +147,24 @@ class PreviewViewController: UIViewController {
             self.livePhotoView.isHidden = true
             self.imageView.isHidden = false
             self.imageView.image = image
+            self.currentImage = image
         })
+    }
+    
+    @objc
+    private func showOverlayPreview() {
+        if isPreviewOn {
+           isPreviewOn = false
+            guard let overlayLayer = overlayLayer else { return }
+            overlayLayer.removeFromSuperlayer()
+        } else {
+            isPreviewOn = true
+            if asset.mediaType == .video {
+                overlayLayer = ImageOverlays.shared.addImageLayer(to: self.view.layer, layerSize: self.view.layer.frame.size)
+            } else {
+                overlayLayer = ImageOverlays.shared.addImageLayer(to: self.imageView.layer, layerSize: self.imageView.frame.size)
+            }
+        }
     }
     
     private func showLivePhoto() {
@@ -110,6 +195,7 @@ class PreviewViewController: UIViewController {
     }
     
     private func playVideo() {
+        // TODO: replay
         guard asset.mediaType == .video else { return }
 
         if playerLayer != nil {
@@ -125,11 +211,12 @@ class PreviewViewController: UIViewController {
                 }
             }
             
-            PHImageManager.default().requestAVAsset(forVideo: asset, options: options, resultHandler: { asset, audioMix, info in
-                let asset = asset as! AVURLAsset
-                print(asset.url)
+            convertPHAsset2AVAsset(asset: asset, options: options) { avAsset in
+                guard let avAsset = avAsset else { return }
+                self.videoAssetUrl = avAsset.url
+                
                 DispatchQueue.main.sync {
-                    let player = AVPlayer(url: asset.url)
+                    let player = AVPlayer(url: avAsset.url)
                     let layer = AVPlayerLayer(player: player)
                     layer.frame = self.view.layer.bounds
                     layer.videoGravity = AVLayerVideoGravity.resizeAspect
@@ -138,8 +225,13 @@ class PreviewViewController: UIViewController {
                     
                     self.playerLayer = layer
                 }
-            })
+            }
         }
     }
-
+    
+    private func convertPHAsset2AVAsset(asset: PHAsset, options: PHVideoRequestOptions?, completion: @escaping (AVURLAsset?) -> Void) {
+        PHImageManager.default().requestAVAsset(forVideo: asset, options: options, resultHandler: { asset, _, _ in
+            completion(asset as? AVURLAsset)
+        })
+    }
 }

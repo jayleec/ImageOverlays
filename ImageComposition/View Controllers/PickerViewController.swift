@@ -28,7 +28,6 @@ class PickerViewController: UIViewController {
         return options
     }()
     private var previousPreheatRect = CGRect.zero
-//    private let cacheQueue = DispatchQueue(label: "cache_queue")
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -72,7 +71,11 @@ class PickerViewController: UIViewController {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         guard let destination = segue.destination as? PreviewViewController else { return }
         let indexPath = collectionView.indexPath(for: sender as! UICollectionViewCell)!
-        destination.asset = viewModel.asset(at: indexPath)
+        guard let asset = viewModel.asset(at: indexPath) else {
+            print("asset not available")
+            return
+        }
+        destination.asset = asset
     }
     
     // MARK: Convenience
@@ -167,26 +170,31 @@ extension PickerViewController: PickerViewViewModelDelegate {
     }
 }
 
+
 // MARK: PHPhotoLibraryChangeObserver
 
 extension PickerViewController: PHPhotoLibraryChangeObserver {
     func photoLibraryDidChange(_ changeInstance: PHChange) {
+        // TODO: fix collectionview update bug
+        
         guard let changes = changeInstance.changeDetails(for: viewModel.assets) else { return }
         DispatchQueue.main.sync {
             viewModel.update(assets: changes.fetchResultAfterChanges)
             if changes.hasIncrementalChanges {
-                if let removed = changes.removedIndexes, removed.count > 0 {
-                    collectionView.deleteItems(at: removed.map { IndexPath(item: $0, section: 0)})
-                }
-                if let inserted = changes.insertedIndexes, inserted.count > 0 {
-                    collectionView.insertItems(at: inserted.map { IndexPath(item: $0, section: 0)})
-                }
-                if let changed = changes.changedIndexes, changed.count > 0 {
-                    collectionView.reloadItems(at: changed.map { IndexPath(item: $0, section: 0)})
-                }
-                changes.enumerateMoves { fromIndex, toIndex in
-                    self.collectionView.moveItem(at: IndexPath(item: fromIndex, section: 0), to: IndexPath(item: toIndex, section: 0))
-                }
+                collectionView.performBatchUpdates({
+                    if let removed = changes.removedIndexes, removed.count > 0 {
+                        collectionView.deleteItems(at: removed.map { IndexPath(item: $0, section: 0)})
+                    }
+                    if let inserted = changes.insertedIndexes, inserted.count > 0 {
+                        collectionView.insertItems(at: inserted.map { IndexPath(item: $0, section: 0)})
+                    }
+                    if let changed = changes.changedIndexes, changed.count > 0 {
+                        collectionView.reloadItems(at: changed.map { IndexPath(item: $0, section: 0)})
+                    }
+                    changes.enumerateMoves { fromIndex, toIndex in
+                        self.collectionView.moveItem(at: IndexPath(item: fromIndex, section: 0), to: IndexPath(item: toIndex, section: 0))
+                    }
+                }, completion: nil)
             } else {
                 collectionView.reloadData()
             }
