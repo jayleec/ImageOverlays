@@ -28,6 +28,7 @@ class PickerViewController: UIViewController {
         return options
     }()
     private var previousPreheatRect = CGRect.zero
+//    private let cacheQueue = DispatchQueue(label: "cache_queue")
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -92,8 +93,8 @@ class PickerViewController: UIViewController {
     // MARK: Asset Caching
     
     func resetCache() {
-        imageManager.stopCachingImagesForAllAssets()
-        previousPreheatRect = .zero
+        self.imageManager.stopCachingImagesForAllAssets()
+        self.previousPreheatRect = .zero
     }
     
     func cacheAssets() {
@@ -102,20 +103,20 @@ class PickerViewController: UIViewController {
         
         // Update only if the visible area is significantly different from the last preheated area.
         let delta = abs(preheatRect.midY - previousPreheatRect.midY)
-        guard delta > view.bounds.height / 3 else { return }
+        guard delta > self.view.bounds.height / 3 else { return }
         
         // Compute the assets to start caching and to stop caching.
         let (addedRects, removeRects) = previousPreheatRect.diffrences(with: preheatRect)
         let addedAssets: [PHAsset] = addedRects
-            .flatMap { rect in collectionView.indexPathsForElements(in: rect) }
-            .map { indexPath in viewModel.asset(at: indexPath)! }
+            .flatMap { rect in self.collectionView.indexPathsForElements(in: rect) }
+            .map { indexPath in self.viewModel.asset(at: indexPath)! }
         let removedAssets = removeRects
-            .flatMap { rect in collectionView.indexPathsForElements(in: rect) }
-            .map { indexPath in viewModel.asset(at: indexPath)! }
+            .flatMap { rect in self.collectionView.indexPathsForElements(in: rect) }
+            .map { indexPath in self.viewModel.asset(at: indexPath)! }
         print("added \(addedAssets.count)")
         
-        imageManager.startCachingImages(for: addedAssets, targetSize: cellSize, contentMode: .aspectFill, options: nil)
-        imageManager.stopCachingImages(for: removedAssets, targetSize: cellSize, contentMode: .aspectFill, options: nil)
+        imageManager.startCachingImages(for: addedAssets, targetSize: self.cellSize, contentMode: .aspectFill, options: nil)
+        imageManager.stopCachingImages(for: removedAssets, targetSize: self.cellSize, contentMode: .aspectFill, options: nil)
         
         previousPreheatRect = preheatRect
     }
