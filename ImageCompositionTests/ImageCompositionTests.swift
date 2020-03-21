@@ -12,22 +12,20 @@ import XCTest
 class ImageCompositionTests: XCTestCase {
 
     override func setUp() {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+        // livePhoto sample
+        
     }
 
     override func tearDown() {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
 
-    func testExample() {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+    func testLivePhotoOverlays() {
+        
+//        LivePhotoOverlays.shared.getResources(from: <#T##PHLivePhoto#>, completion: <#T##(LivePhotoOverlays.LivePhotoResources?) -> Void#>)
     }
 
     func testPerformanceExample() {
-        // This is an example of a performance test case.
         self.measure {
-            // Put the code you want to measure the time of here.
         }
     }
 

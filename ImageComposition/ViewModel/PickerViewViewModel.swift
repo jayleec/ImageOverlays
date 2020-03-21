@@ -20,12 +20,7 @@ class PickerViewViewModel: NSObject {
     weak var delegate: PickerViewViewModelDelegate?
     
     var smartAlbums: PHFetchResult<PHAssetCollection>?
-    var assets: PHFetchResult<PHAsset>! {
-        didSet {
-            print("assets didSet \(assets.count)")
-            delegate?.reloadView()
-        }
-    }
+    var assets: PHFetchResult<PHAsset>!
     
     var numberOfPhotos: Int {
         return assets.count
@@ -60,6 +55,7 @@ class PickerViewViewModel: NSObject {
         } else if let album = smartAlbums?[index!] {
             assets = PHAsset.fetchAssets(in: album, options: defaultOptions)
         }
+        delegate?.reloadView()
     }
     
     func asset(at indexPath: IndexPath) -> PHAsset? {

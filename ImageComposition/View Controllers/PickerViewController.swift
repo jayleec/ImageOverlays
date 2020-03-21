@@ -47,7 +47,6 @@ class PickerViewController: UIViewController {
     }
     
     deinit {
-        print("deinit")
         PHPhotoLibrary.shared().unregisterChangeObserver(self)
     }
     
@@ -95,12 +94,12 @@ class PickerViewController: UIViewController {
     
     // MARK: Asset Caching
     
-    func resetCache() {
+    private func resetCache() {
         self.imageManager.stopCachingImagesForAllAssets()
         self.previousPreheatRect = .zero
     }
     
-    func cacheAssets() {
+    private func cacheAssets() {
         let visibleRect = CGRect(origin: collectionView.contentOffset, size: collectionView.bounds.size)
         let preheatRect = visibleRect.insetBy(dx: 0, dy: -0.5 * visibleRect.height)
         
@@ -116,7 +115,6 @@ class PickerViewController: UIViewController {
         let removedAssets = removeRects
             .flatMap { rect in self.collectionView.indexPathsForElements(in: rect) }
             .map { indexPath in self.viewModel.asset(at: indexPath)! }
-        print("added \(addedAssets.count)")
         
         imageManager.startCachingImages(for: addedAssets, targetSize: self.cellSize, contentMode: .aspectFill, options: nil)
         imageManager.stopCachingImages(for: removedAssets, targetSize: self.cellSize, contentMode: .aspectFill, options: nil)
@@ -156,6 +154,7 @@ extension PickerViewController: UICollectionViewDataSource, UICollectionViewDele
 
 extension PickerViewController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        // TODO: 가로모드 일때
         let width = (collectionView.bounds.width - 4) / 3
         return CGSize(width: width, height: width)
     }
@@ -170,13 +169,10 @@ extension PickerViewController: PickerViewViewModelDelegate {
     }
 }
 
-
 // MARK: PHPhotoLibraryChangeObserver
 
 extension PickerViewController: PHPhotoLibraryChangeObserver {
     func photoLibraryDidChange(_ changeInstance: PHChange) {
-        // TODO: fix collectionview update bug
-        
         guard let changes = changeInstance.changeDetails(for: viewModel.assets) else { return }
         DispatchQueue.main.sync {
             viewModel.update(assets: changes.fetchResultAfterChanges)

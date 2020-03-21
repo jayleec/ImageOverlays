@@ -37,12 +37,14 @@ class PreviewViewController: UIViewController {
             toolBar.isHidden = true
         }
     }
+    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         self.tabBarController?.tabBar.isHidden = false
         view.layoutIfNeeded()
         updateImage()
     }
+    
     @IBAction func showPreviewButtonTapped(_ sender: Any) {
         showOverlayPreview()
     }
@@ -73,6 +75,10 @@ class PreviewViewController: UIViewController {
                     self.saveVideo(videoUrl: exportUrl)
                 }
             }
+        } else if asset.mediaSubtypes.contains(.photoLive) {
+            
+            
+            
         } else {
             if !isPreviewOn {
                 showOverlayPreview()
@@ -84,14 +90,36 @@ class PreviewViewController: UIViewController {
         }
     }
     
+    private func saveLivePhoto(imageData: Data, livePhotoMovieURL: URL) {
+        PHPhotoLibrary.shared().performChanges({
+            // Add the captured photo's file data as the main resource for the Photos asset.
+            let creationRequest = PHAssetCreationRequest.forAsset()
+            creationRequest.addResource(with: .photo, data: imageData, options: nil)
+            
+            // Add the movie file URL as the Live Photo's paired video resource.
+            let options = PHAssetResourceCreationOptions()
+            options.shouldMoveFile = true
+            creationRequest.addResource(with: .pairedVideo, fileURL: livePhotoMovieURL, options: options)
+        }) { [weak self] success, error in
+            if success {
+                DispatchQueue.main.async {
+                    self?.navigationController?.popViewController(animated: true)
+                }
+            } else {
+                print("live photo save fail \(error.debugDescription)")
+//                showAlert()
+            }
+        }
+    }
+    
     private func saveImage(image: UIImage) {
         PHPhotoLibrary.shared().performChanges({
             PHAssetChangeRequest.creationRequestForAsset(from: image)
-        }) {[weak self] (isSaved, error) in
-            if isSaved {
+        }) {[weak self] success, error in
+            if success {
                 print("Saved")
             } else {
-                print("saving error \(error)")
+                print("saving error \(error.debugDescription)")
             }
             DispatchQueue.main.async {
                 self?.navigationController?.popViewController(animated: true)
@@ -102,11 +130,11 @@ class PreviewViewController: UIViewController {
     private func saveVideo(videoUrl: URL) {
         PHPhotoLibrary.shared().performChanges({
             PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: videoUrl)
-        }) { [weak self] (isSaved, error) in
-            if isSaved {
+        }) { [weak self] success, error in
+            if success {
                 print("Saved")
             } else {
-                print("saving error \(error)")
+                print("saving error \(error.debugDescription)")
             }
             DispatchQueue.main.async {
                 self?.navigationController?.popViewController(animated: true)
@@ -161,6 +189,8 @@ class PreviewViewController: UIViewController {
             isPreviewOn = true
             if asset.mediaType == .video {
                 overlayLayer = ImageOverlays.shared.addImageLayer(to: self.view.layer, layerSize: self.view.layer.frame.size)
+            } else if asset.mediaSubtypes.contains(.photoLive) {
+                
             } else {
                 overlayLayer = ImageOverlays.shared.addImageLayer(to: self.imageView.layer, layerSize: self.imageView.frame.size)
             }
@@ -171,6 +201,7 @@ class PreviewViewController: UIViewController {
         let options = PHLivePhotoRequestOptions()
         options.deliveryMode = .highQualityFormat
         options.isNetworkAccessAllowed = true
+        // TODO: -> func
         options.progressHandler = { progress, _, _, _ in
             DispatchQueue.main.sync {
                 print("progress\(progress)")
@@ -185,6 +216,7 @@ class PreviewViewController: UIViewController {
             self.imageView.isHidden = true
             self.livePhotoView.isHidden = false
             self.livePhotoView.livePhoto = livePhoto
+            // TODO: get all resources
             
             if !self.isPlayingHint {
                 self.isPlayingHint = true
