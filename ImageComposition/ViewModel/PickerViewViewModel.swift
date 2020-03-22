@@ -18,25 +18,23 @@ protocol PickerViewViewModelDelegate: class {
 class PickerViewViewModel: NSObject {
     
     weak var delegate: PickerViewViewModelDelegate?
-    
-    var smartAlbums: PHFetchResult<PHAssetCollection>?
-    var assets: PHFetchResult<PHAsset>!
-    
-    var numberOfPhotos: Int {
-        return assets.count
-    }
-    var selectedAlbumIndex: AlbumIndex = 0 {
-        didSet {
-            print("selectedAlbumIndex didSet \(selectedAlbumIndex)")
-            fetchPhotos(at: selectedAlbumIndex)
-        }
-    }
-    
+
     private let defaultOptions: PHFetchOptions = {
         let options = PHFetchOptions()
         options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
         return options
     }()
+    
+    var assets: PHFetchResult<PHAsset>!
+    var smartAlbums: PHFetchResult<PHAssetCollection>?
+    var numberOfPhotos: Int {
+        return assets.count
+    }
+    var selectedAlbumIndex: AlbumIndex = 0 {
+        didSet {
+            fetchPhotos(at: selectedAlbumIndex)
+        }
+    }
     
     override init() {
         super.init()

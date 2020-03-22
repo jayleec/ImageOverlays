@@ -16,11 +16,7 @@ class PickerViewController: UIViewController {
     
     private let viewModel = PickerViewViewModel()
     private let imageManager = PHCachingImageManager()
-    private var cellSize: CGSize {
-        get {
-            return (collectionView.collectionViewLayout as? UICollectionViewFlowLayout)?.itemSize ?? .zero
-        }
-    }
+    private var thumbnailSize: CGSize!
     private let requestOptions: PHImageRequestOptions = {
         let options = PHImageRequestOptions()
         options.isNetworkAccessAllowed = true
@@ -44,6 +40,13 @@ class PickerViewController: UIViewController {
                 }
             }
         }
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        let scale = UIScreen.main.scale
+        let cellSize = (collectionView.collectionViewLayout as! UICollectionViewFlowLayout).itemSize
+        thumbnailSize = CGSize(width: cellSize.width * scale, height: cellSize.height * scale)
     }
     
     deinit {
@@ -70,10 +73,7 @@ class PickerViewController: UIViewController {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         guard let destination = segue.destination as? PreviewViewController else { return }
         let indexPath = collectionView.indexPath(for: sender as! UICollectionViewCell)!
-        guard let asset = viewModel.asset(at: indexPath) else {
-            print("asset not available")
-            return
-        }
+        guard let asset = viewModel.asset(at: indexPath) else { return }
         destination.asset = asset
     }
     
@@ -87,9 +87,10 @@ class PickerViewController: UIViewController {
         viewModel.fetchPhotos(at: index)
     }
     
-    // TODO:
     private func showNotAvailableAlert() {
-        
+        let alertView = UIAlertController(title: "Warning", message: "image preview not available", preferredStyle: .alert)
+        alertView.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+        present(alertView, animated: true)
     }
     
     // MARK: Asset Caching
@@ -116,8 +117,8 @@ class PickerViewController: UIViewController {
             .flatMap { rect in self.collectionView.indexPathsForElements(in: rect) }
             .map { indexPath in self.viewModel.asset(at: indexPath)! }
         
-        imageManager.startCachingImages(for: addedAssets, targetSize: self.cellSize, contentMode: .aspectFill, options: nil)
-        imageManager.stopCachingImages(for: removedAssets, targetSize: self.cellSize, contentMode: .aspectFill, options: nil)
+        imageManager.startCachingImages(for: addedAssets, targetSize: self.thumbnailSize, contentMode: .aspectFill, options: nil)
+        imageManager.stopCachingImages(for: removedAssets, targetSize: self.thumbnailSize, contentMode: .aspectFill, options: nil)
         
         previousPreheatRect = preheatRect
     }
@@ -137,7 +138,7 @@ extension PickerViewController: UICollectionViewDataSource, UICollectionViewDele
             cell.liveImageBadge.image = PHLivePhotoView.livePhotoBadgeImage(options: .overContent)
         }
         cell.assetId = asset.localIdentifier
-        imageManager.requestImage(for: asset, targetSize: cellSize, contentMode: .aspectFill, options: requestOptions, resultHandler: { image, _ in
+        imageManager.requestImage(for: asset, targetSize: thumbnailSize, contentMode: .aspectFill, options: requestOptions, resultHandler: { image, _ in
             if cell.assetId == asset.localIdentifier {
                 cell.imageView.image = image
             }
@@ -154,7 +155,6 @@ extension PickerViewController: UICollectionViewDataSource, UICollectionViewDele
 
 extension PickerViewController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        // TODO: 가로모드 일때
         let width = (collectionView.bounds.width - 4) / 3
         return CGSize(width: width, height: width)
     }

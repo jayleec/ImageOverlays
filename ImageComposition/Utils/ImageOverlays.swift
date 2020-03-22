@@ -9,7 +9,6 @@
 import UIKit
 
 class ImageOverlays {
-    
     static let shared = ImageOverlays()
     private let overlayImageName = "meadow.png"
     

@@ -22,6 +22,8 @@ class PhotoCell: UICollectionViewCell {
         _ = imageView.anchor(contentView.topAnchor, left: contentView.leftAnchor, bottom: contentView.bottomAnchor, right: contentView.rightAnchor, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 0, heightConstant: 0)
         imageView.addSubview(liveImageBadge)
         _ = liveImageBadge.anchor(imageView.topAnchor, left: imageView.leftAnchor, bottom: nil, right: nil, topConstant: 0, leftConstant: 0, bottomConstant: 0, rightConstant: 0, widthConstant: 30, heightConstant: 30)
+        
+        imageView.contentMode = .scaleAspectFill
     }
     
     override func prepareForReuse() {

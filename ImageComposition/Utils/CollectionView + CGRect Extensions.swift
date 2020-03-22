@@ -1,5 +1,5 @@
 //
-//  Utils.swift
+//  CollectionView + CGRect Extensions.swift
 //  ImageComposition
 //
 //  Created by Jae Kyung Lee on 2020/03/19.

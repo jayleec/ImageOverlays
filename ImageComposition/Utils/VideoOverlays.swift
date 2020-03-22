@@ -11,8 +11,21 @@ import AVFoundation
 
 class VideoOverlays {
     static let shared = VideoOverlays()
+    private var timer: DispatchSourceTimer?
+    private let progressQueue = DispatchQueue(label: "com.jk.progress_queue")
+    private var progressValue: Float = 0.1
     
-    func exportCombinedVideo(from videoUrl: URL, completion: @escaping (URL?) -> Void) {
+    func exportCombinedVideo(from videoUrl: URL, progress: @escaping (Float) -> Void, completion: @escaping (URL?) -> Void) {
+        print(videoUrl)
+        // Set progress timer
+        timer = DispatchSource.makeTimerSource(flags: .strict, queue: progressQueue)
+        timer?.schedule(deadline: .now(), repeating: .seconds(1), leeway: .milliseconds(1))
+        timer?.setEventHandler(handler: { [unowned self] in
+            self.progressValue += 0.1
+            progress(self.progressValue)
+        })
+        timer?.resume()
+        
         let asset = AVURLAsset(url: videoUrl)
         let composition = AVMutableComposition()
         
@@ -20,7 +33,7 @@ class VideoOverlays {
             completion(nil)
             return
         }
-        
+        // To combine audio
         do {
             let wholeTime = CMTimeRange(start: .zero, end: asset.duration)
             try compositionTrack.insertTimeRange(wholeTime, of: assetTrack, at: .zero)
@@ -33,7 +46,7 @@ class VideoOverlays {
             completion(nil)
             return
         }
-        
+        // Set output video size
         compositionTrack.preferredTransform = assetTrack.preferredTransform
         let videoInfo = orientation(from: assetTrack.preferredTransform)
         let videoSize: CGSize
@@ -45,13 +58,13 @@ class VideoOverlays {
         
         let videoLayer = createCALayer(size: videoSize)
         let overlayLayer = createCALayer(size: videoSize)
-        
+        // Add overlay image
         _ = ImageOverlays.shared.addImageLayer(to: overlayLayer, layerSize: videoSize)
         
         let ouputLayer = createCALayer(size: videoSize)
         ouputLayer.addSublayer(videoLayer)
         ouputLayer.addSublayer(overlayLayer)
-        
+        // Output video composition
         let videoComposition = AVMutableVideoComposition()
         videoComposition.renderSize = videoSize
         videoComposition.frameDuration = CMTime(value: 1, timescale: 30)
@@ -62,7 +75,7 @@ class VideoOverlays {
         videoComposition.instructions = [instruction]
         let layerInstruction = compositionLayerInstruction(for: compositionTrack, assetTrack: assetTrack)
         instruction.layerInstructions = [layerInstruction]
-        
+        // Export session
         guard let export = AVAssetExportSession(asset: composition, presetName: AVAssetExportPresetHighestQuality) else {
             print("Fail to export session")
             completion(nil)
@@ -79,6 +92,8 @@ class VideoOverlays {
             DispatchQueue.main.async {
                 switch export.status {
                 case .completed:
+                    print("completed")
+                    self.timer?.cancel()
                     completion(exportURL)
                 default:
                     print(export.error ?? "export error occurred")

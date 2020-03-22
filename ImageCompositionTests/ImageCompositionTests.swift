@@ -12,16 +12,33 @@ import XCTest
 class ImageCompositionTests: XCTestCase {
 
     override func setUp() {
-        // livePhoto sample
         
     }
 
     override func tearDown() {
     }
 
-    func testLivePhotoOverlays() {
+    func test() {
+        let sampleVideoUrl = "file:///var/mobile/Media/DCIM/100APPLE/IMG_0154.MOV"
         
-//        LivePhotoOverlays.shared.getResources(from: <#T##PHLivePhoto#>, completion: <#T##(LivePhotoOverlays.LivePhotoResources?) -> Void#>)
+        let progressHandler: (Float) -> Void = { p in
+            print(p)
+        }
+        VideoOverlays.shared.exportCombinedVideo(from: URL(fileURLWithPath: sampleVideoUrl), progress: progressHandler , completion: { url in
+            guard let url = url else {
+                XCTFail("get export video url fail")
+                return
+            }
+            
+            let exp = self.expectation(description: "get export video url")
+            let result = XCTWaiter.wait(for: [exp], timeout: 1)
+            if result == XCTWaiter.Result.timedOut {
+                XCTAssertTrue(url.isFileURL)
+            } else {
+                XCTFail("get export video url fail")
+            }
+            
+        })
     }
 
     func testPerformanceExample() {
