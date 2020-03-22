@@ -92,16 +92,18 @@ class VideoOverlays {
             DispatchQueue.main.async {
                 switch export.status {
                 case .completed:
-                    print("completed")
                     self.timer?.cancel()
                     completion(exportURL)
                 default:
                     print(export.error ?? "export error occurred")
+                    self.timer?.cancel()
                     completion(nil)
                 }
             }
         }
     }
+    
+    // MARK: Convenience
     
     private func compositionLayerInstruction(for track: AVCompositionTrack, assetTrack: AVAssetTrack) -> AVMutableVideoCompositionLayerInstruction {
         let instruction = AVMutableVideoCompositionLayerInstruction(assetTrack: track)
