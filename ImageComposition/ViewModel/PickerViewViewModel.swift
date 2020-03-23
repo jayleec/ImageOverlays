@@ -26,7 +26,12 @@ class PickerViewViewModel: NSObject {
     }()
     
     var assets: PHFetchResult<PHAsset>!
-    var smartAlbums: PHFetchResult<PHAssetCollection>?
+    var smartAlbums: PHFetchResult<PHAssetCollection>? {
+        didSet {
+            assets = PHAsset.fetchAssets(with: defaultOptions)
+            delegate?.reloadView()
+        }
+    }
     var numberOfPhotos: Int {
         return assets.count
     }
@@ -63,4 +68,5 @@ class PickerViewViewModel: NSObject {
     func update(assets: PHFetchResult<PHAsset>) {
         self.assets = assets
     }
+
 }
