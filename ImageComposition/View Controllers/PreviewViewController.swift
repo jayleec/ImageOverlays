@@ -126,10 +126,21 @@ class PreviewViewController: UIViewController {
                 if !isPreviewOn {
                     showOverlayPreview()
                 }
+                ImageOverlays.shared.exportImage(image: currentImage!) { combined in
+                    guard let combined = combined else { return }
+                    
+                    
+                    print("combined image \(combined)")
+                    
+                    self.saveImage(image: combined)
+                }
+                
+                /*
                 ImageOverlays.shared.exportImage(imageView: imageView) { combined in
                     guard let combined = combined else { return }
                     self.saveImage(image: combined)
                 }
+ */
             }
         }
     }
@@ -251,7 +262,7 @@ class PreviewViewController: UIViewController {
     
    private func saveImage(image: UIImage) {
        PHPhotoLibrary.shared().performChanges({
-           PHAssetChangeRequest.creationRequestForAsset(from: image)
+            PHAssetChangeRequest.creationRequestForAsset(from: image)
        }) {[weak self] success, error in
            guard let self = self else { return }
            if success {
@@ -266,7 +277,7 @@ class PreviewViewController: UIViewController {
    
    private func saveVideo(videoUrl: URL) {
        PHPhotoLibrary.shared().performChanges({
-           PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: videoUrl)
+            PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: videoUrl)
        }) { [weak self] success, error in
            guard let self = self else { return }
            if success {

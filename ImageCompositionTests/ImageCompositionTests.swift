@@ -10,6 +10,8 @@ import XCTest
 @testable import ImageComposition
 
 class ImageCompositionTests: XCTestCase {
+    
+
 
     override func setUp() {
         
@@ -41,9 +43,32 @@ class ImageCompositionTests: XCTestCase {
         })
     }
 
-    func testPerformanceExample() {
+    func testPerformanceCIFilter() { // 1.658
+        let sampleImageName = "IMG_1204.HEIC"
+        let sampleImage = UIImage(named: sampleImageName)!
+        
         self.measure {
+            ImageOverlays.shared.exportImage(image: sampleImage) { result in
+                
+                
+            }
         }
+        
+    }
+    
+    func testPerformance() {  // 3.540
+        let sampleImageName = "IMG_1204.HEIC"
+        let sampleImage = UIImage(named: sampleImageName)!
+        let imageView = UIImageView(image: sampleImage)
+        
+        
+        self.measure {
+            ImageOverlays.shared.exportImage(imageView: imageView) { result in
+                
+                
+            }
+        }
+        
     }
 
 }
