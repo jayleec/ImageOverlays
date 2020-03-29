@@ -36,7 +36,7 @@ class ImageOverlays {
     
     func exportImage(image: UIImage, completion: @escaping (UIImage?) -> Void) {
         if #available(iOS 13.0, *) {
-            let blendFilter = CIFilter.overlayBlendMode()
+            let blendFilter = CIFilter.sourceOverCompositing()
             let ciImage = CIImage(image: image)
             blendFilter.backgroundImage = ciImage
             
@@ -45,13 +45,39 @@ class ImageOverlays {
             let scale = image.size.width / overlay.size.width
             let overlayHeight = scale * overlay.size.height
             
-            var transform = CGAffineTransform(scaleX: scale, y: scale)
-            transform = transform.translatedBy(x: 0, y: abs(image.size.height - overlayHeight) / 2)
+            var transform = CGAffineTransform(translationX: 0, y: abs(image.size.height - overlayHeight) / 2)
+            transform = transform.scaledBy(x: scale, y: scale)
             
             inputImage = inputImage?.transformed(by: transform)
             blendFilter.inputImage = inputImage
 
             guard let output = blendFilter.outputImage else {
+                completion(nil)
+                return
+            }
+            let context = CIContext()
+            guard let cgImage = context.createCGImage(output, from: CGRect(x: 0, y: 0, width: image.size.width, height: image.size.height)) else {
+                completion(nil)
+                return
+            }
+            completion(UIImage(cgImage: cgImage))
+        } else {
+            let blendFilter = CIFilter(name:"CISourceOverCompositing")
+            let ciImage = CIImage(image: image)
+            blendFilter?.setValue(ciImage, forKey: kCIInputBackgroundImageKey)
+            
+            let overlay = UIImage(named: overlayImageName)!
+            var inputImage = CIImage(image: overlay)
+            let scale = image.size.width / overlay.size.width
+            let overlayHeight = scale * overlay.size.height
+            
+            var transform = CGAffineTransform(translationX: 0, y: abs(image.size.height - overlayHeight) / 2)
+            transform = transform.scaledBy(x: scale, y: scale)
+            
+            inputImage = inputImage?.transformed(by: transform)
+            blendFilter?.setValue(inputImage, forKey: kCIInputImageKey)
+
+            guard let output = blendFilter?.outputImage else {
                 completion(nil)
                 return
             }

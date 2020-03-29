@@ -126,17 +126,17 @@ class PreviewViewController: UIViewController {
                 if !isPreviewOn {
                     showOverlayPreview()
                 }
-                /*
+                
                 ImageOverlays.shared.exportImage(image: currentImage!) { combined in
                     guard let combined = combined else { return }
                     self.saveImage(image: combined)
                 }
-                */
+                /*
                 ImageOverlays.shared.exportImage(imageView: imageView) { combined in
                     guard let combined = combined else { return }
                     self.saveImage(image: combined)
                 }
- 
+ */
             }
         }
     }
